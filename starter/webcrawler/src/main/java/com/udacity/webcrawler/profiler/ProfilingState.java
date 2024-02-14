@@ -16,6 +16,10 @@ import java.util.stream.Collectors;
 final class ProfilingState {
   private final Map<String, Duration> data = new ConcurrentHashMap<>();
 
+  public Map<String, Duration> getData() {
+    return data;
+  }
+
   /**
    * Records the given method invocation data.
    *

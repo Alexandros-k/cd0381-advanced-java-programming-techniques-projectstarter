@@ -19,26 +19,41 @@ import java.util.Objects;
 
 public final class WebCrawlerMain {
 
-  private final CrawlerConfiguration config;
+    private final CrawlerConfiguration config;
 
-  private WebCrawlerMain(CrawlerConfiguration config) {
-    this.config = Objects.requireNonNull(config);
-  }
+    private WebCrawlerMain(CrawlerConfiguration config) {
+        this.config = Objects.requireNonNull(config);
+    }
 
-  @Inject
-  private WebCrawler crawler;
+    @Inject
+    private WebCrawler crawler;
 
-  @Inject
-  private Profiler profiler;
+    @Inject
+    private Profiler profiler;
+    private void run() throws Exception {
+        Guice.createInjector(new WebCrawlerModule(config), new ProfilerModule()).injectMembers(this);
 
-  private void run() throws Exception {
-    Guice.createInjector(new WebCrawlerModule(config), new ProfilerModule()).injectMembers(this);
+        CrawlResult result = crawler.crawl(config.getStartPages());
+        CrawlResultWriter resultWriter = new CrawlResultWriter(result);
+        // TODO: Write the crawl results to a JSON file (or System.out if the file name is empty)
+        String resultPath = config.getResultPath();
+        if (!resultPath.isEmpty()) {
+            resultWriter.write(Path.of(resultPath));
+        } else {
+            Writer out = new BufferedWriter(new OutputStreamWriter(System.out));
+            resultWriter.write(out);
+            out.flush();
+        }
 
-    CrawlResult result = crawler.crawl(config.getStartPages());
-    CrawlResultWriter resultWriter = new CrawlResultWriter(result);
-    // TODO: Write the crawl results to a JSON file (or System.out if the file name is empty)
-    // TODO: Write the profile data to a text file (or System.out if the file name is empty)
-  }
+        // TODO: Write the profile data to a text file (or System.out if the file name is empty)
+        if (!resultPath.isEmpty()) {
+        profiler.writeData(Path.of(resultPath));
+        } else {
+            Writer out = new BufferedWriter(new OutputStreamWriter(System.out));
+            resultWriter.write(out);
+            out.flush();
+        }
+    }
 
   public static void main(String[] args) throws Exception {
     if (args.length != 1) {
