@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -60,20 +61,9 @@ final class ProfilerImpl implements Profiler {
   public void writeData(Path path) {
     // TODO: Write the ProfilingState data to the given file path. If a file already exists at that
     //       path, the new data should be appended to the existing file.
-    try (BufferedWriter writer = Files.newBufferedWriter(path, StandardOpenOption.CREATE, StandardOpenOption.APPEND)) {
-      // Write a header indicating the start time
-      writer.write("Data recorded since: " + startTime.format(DateTimeFormatter.ISO_DATE_TIME));
-      writer.newLine();
-
-      // Write the method invocation data
-      state.getData().forEach((methodKey, duration) -> {
-        try {
-          writer.write(methodKey);
-          writer.newLine();
-        } catch (IOException e) {
-          e.printStackTrace(); // Handle the exception appropriately
-        }
-      });
+    try (Writer writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND)) {
+      writeData(writer);
+      writer.flush();
     } catch (IOException e) {
       e.printStackTrace(); // Handle the exception appropriately
     }
